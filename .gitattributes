@@ -1,0 +1,6 @@
+# Normalise line endings. Files committed from GitHub's web editor use LF, so
+# without this every browser edit would show up as a whole-file change.
+* text=auto eol=lf
+*.jpg binary
+*.png binary
+*.ico binary

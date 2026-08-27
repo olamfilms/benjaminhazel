@@ -1,0 +1,52 @@
+---
+title: Post template
+date: 2026-01-01
+draft: true
+---
+
+Copy this file to start a new post. Any file in this folder whose name starts
+with an underscore is skipped, so this one never appears on the site.
+
+Name the new file the way you want the URL to read, ending in `.mdx`.
+`a-week-on-the-inlet.mdx` becomes `/blog/a-week-on-the-inlet`.
+
+The block at the top between the two lines of dashes is the frontmatter. Only
+`title` and `date` have to be there. Dates are year-month-day. You can also add
+a `description`, which shows on the blog index and in link previews.
+
+`draft: true` means the post is visible when the site runs on your own machine
+but is left out of the live site. Delete that line when the post is ready.
+
+Body text is plain Markdown. Leave a blank line between paragraphs. That is most
+of what you need.
+
+## Two hashes make a section heading
+
+Three make a smaller one. *One asterisk each side* makes italics, **two** makes
+bold. A link is [the words in square brackets](https://example.com) followed by
+the address in parentheses.
+
+- A dash makes a bullet
+- One per line
+
+> A right angle bracket makes a pulled quote.
+
+To place a photo, put the original in the `Photos` folder, run `npm run photos`,
+then point at the web-sized copy:
+
+<Figure
+  src="/photos/the-file-name.jpg"
+  alt="What is in the photo, for anyone who cannot see it. Always write this."
+  caption="Optional. Delete the line if you do not want one."
+  size="wide"
+/>
+
+`size` is `column` to sit inside the text, `wide` to break out a little, or
+`full` for edge to edge.
+
+To embed a video, paste any normal YouTube or Vimeo link:
+
+<VideoEmbed
+  url="https://vimeo.com/123456789"
+  caption="Optional."
+/>
