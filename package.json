@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "photos": "node scripts/optimize-photos.mjs"
+    "photos": "node scripts/optimize-photos.mjs",
+    "favicon": "node scripts/make-favicon.mjs"
   },
   "dependencies": {
     "@mdx-js/loader": "^3.1.1",
