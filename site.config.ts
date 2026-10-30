@@ -39,7 +39,7 @@ export const films: LinkItem[] = [
   {
     label: "The Roundtable",
     note: "Collaboration as a form of salmon stewardship.",
-    // PLACEHOLDER: href, once there's somewhere to watch it.
+    href: "/blog/the-roundtable",
   },
 ];
 
