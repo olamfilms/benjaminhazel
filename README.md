@@ -111,16 +111,16 @@ Originals stay out of git.
 
 Everything below is still outstanding.
 
-- **Kit credentials.** `KIT_API_KEY` and `KIT_FORM_ID` in `.env.local` and in the
-  Vercel project settings. See `app/api/subscribe/route.ts`.
+- **Resend key.** `RESEND_API_KEY` in `.env.local` and in the Vercel project
+  settings. The contact form (`app/api/contact/route.ts`) and the newsletter
+  signup (`app/api/subscribe/route.ts`) both need it.
 - **Film links.** `The Private Forest` and `The Roundtable` in `site.config.ts`
   have no `href`, so they render as plain text rather than dead links. Add one
   and they become links.
 - **A first post.** The blog is empty and reads as such. Nothing is broken.
 
 API keys go in `.env.local` locally and in the Vercel project settings for
-production. See `.env.example`. The Formspree URL is not a secret and belongs in
-`site.config.ts`.
+production. See `.env.example`.
 
 ## Deploying
 

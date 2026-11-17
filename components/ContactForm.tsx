@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { contact } from "@/site.config";
+import { useEffect, useRef, useState } from "react";
+import { site } from "@/site.config";
 
 type Status = "idle" | "sending" | "done" | "error";
 
@@ -11,39 +11,56 @@ const fieldClass =
 export default function ContactForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
+  const [mailto, setMailto] = useState<string | null>(null);
+  const startedAt = useRef(0);
+
+  useEffect(() => {
+    startedAt.current = Date.now();
+  }, []);
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-
-    if (!contact.formAction) {
-      setStatus("error");
-      setMessage("The contact form isn’t connected yet.");
-      return;
-    }
+    const fd = new FormData(form);
+    const data = {
+      name: String(fd.get("name") ?? ""),
+      email: String(fd.get("email") ?? ""),
+      message: String(fd.get("message") ?? ""),
+      website: String(fd.get("website") ?? ""),
+      elapsed: Date.now() - startedAt.current,
+    };
+    const fallback = `mailto:${site.email}?subject=${encodeURIComponent(
+      `Message from ${data.name}`,
+    )}&body=${encodeURIComponent(data.message)}`;
 
     setStatus("sending");
+    setMailto(null);
     try {
-      // Formspree takes the form as FormData and answers JSON when asked to.
-      const res = await fetch(contact.formAction, {
+      const res = await fetch("/api/contact", {
         method: "POST",
-        body: new FormData(form),
-        headers: { Accept: "application/json" },
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
       });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
 
       if (!res.ok) {
-        const body = (await res.json().catch(() => null)) as {
-          errors?: { message?: string }[];
-        } | null;
-        throw new Error(body?.errors?.[0]?.message ?? "That didn’t send.");
+        setStatus("error");
+        if (res.status === 400 && body.error) {
+          setMessage(body.error);
+        } else {
+          setMessage("That didn’t send. You can email it to me instead.");
+          setMailto(fallback);
+        }
+        return;
       }
 
       setStatus("done");
       setMessage("Got it. I’ll get back to you.");
       form.reset();
-    } catch (error) {
+    } catch {
       setStatus("error");
-      setMessage(error instanceof Error ? error.message : "That didn’t send.");
+      setMessage("That didn’t send. You can email it to me instead.");
+      setMailto(fallback);
     }
   }
 
@@ -100,12 +117,12 @@ export default function ContactForm() {
         />
       </div>
 
-      {/* _gotcha is Formspree's honeypot: anything that fills it is discarded silently. */}
+      {/* Honeypot: people never see this field, so anything in it is a bot. */}
       <div aria-hidden className="absolute h-px w-px overflow-hidden opacity-0">
         <label htmlFor="contact-gotcha">Leave this empty</label>
         <input
           id="contact-gotcha"
-          name="_gotcha"
+          name="website"
           type="text"
           tabIndex={-1}
           autoComplete="off"
@@ -123,7 +140,12 @@ export default function ContactForm() {
 
         {status !== "idle" && status !== "sending" && message && (
           <p role="status" className="font-sans text-sm text-ink-muted">
-            {message}
+            {message}{" "}
+            {mailto && (
+              <a href={mailto} className="underline underline-offset-4">
+                Email it
+              </a>
+            )}
           </p>
         )}
       </div>

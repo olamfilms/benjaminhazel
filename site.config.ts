@@ -50,24 +50,14 @@ export const socialLinks: LinkItem[] = [
   { label: "YouTube", href: "https://www.youtube.com/@salmonberrystudios" },
 ];
 
-export const contact = {
-  /*
-   * Formspree endpoint. Not a secret, so it lives here rather than in an env
-   * var. Formspree forwards submissions to site.email and handles spam filtering.
-   */
-  formAction: "https://formspree.io/f/xoeqagbe" as string | null,
-};
-
 export const newsletter = {
   /*
-   * The signup posts to /api/subscribe, which talks to Kit. That route needs
-   * KIT_API_KEY and KIT_FORM_ID set in .env.local and in Vercel.
+   * The signup posts to /api/subscribe, which adds the address to the Resend
+   * contact list. That route needs RESEND_API_KEY set in .env.local and in Vercel.
    *
-   * Escape hatch: set this to Kit's embed form action
-   * (https://app.kit.com/forms/<form-id>/subscriptions) and the form posts
-   * straight to Kit instead, no API key and no route involved. The tradeoff is
-   * that the visitor gets sent to Kit's own confirmation page.
+   * Escape hatch: set this to another provider's embed form action and the form
+   * posts straight there instead, with no route involved.
    */
   action: null as string | null,
-  emailFieldName: "email_address",
+  emailFieldName: "email",
 };
