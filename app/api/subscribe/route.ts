@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { welcomeHtml, welcomeSubject, welcomeText } from "@/lib/welcome-email";
 
 /*
  * Newsletter signup. Adds the address as a contact in Resend, the same list
@@ -85,7 +86,23 @@ export async function POST(request: Request) {
       return fail();
     }
 
-    return NextResponse.json({ message: "Thanks. You’re on the list." });
+    // New signup: send the welcome email. The signup still counts if this fails.
+    const welcome = await fetch(`${API}/emails`, {
+      method: "POST",
+      headers: { ...headers, "Idempotency-Key": `welcome-${email}` },
+      body: JSON.stringify({
+        from: "Ben Hazel, Salmonberry Studios <ben@salmonberrystudios.com>",
+        to: [email],
+        subject: welcomeSubject,
+        text: welcomeText,
+        html: welcomeHtml,
+        headers: { "List-Unsubscribe": "<mailto:ben@salmonberrystudios.com?subject=unsubscribe>" },
+        tags: [{ name: "type", value: "welcome" }],
+      }),
+    });
+    if (!welcome.ok) console.error("[subscribe] Welcome email error", welcome.status, await welcome.text());
+
+    return NextResponse.json({ message: "Thanks. You’re on the list. Check your inbox for a welcome email." });
   } catch (error) {
     console.error("[subscribe] request to Resend failed", error);
     return fail();
