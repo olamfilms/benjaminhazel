@@ -4,12 +4,15 @@ import { NextResponse } from "next/server";
  * Newsletter signup. Adds the address as a contact in Resend, the same list
  * Salmonberry Studios film updates go to.
  *
- * Environment variables (in .env.local for local dev, and in Vercel):
- *   RESEND_API_KEY      required
- *   RESEND_SEGMENT_ID   optional, adds the contact to this segment
+ * Needs RESEND_API_KEY (in .env.local for local dev, and in Vercel).
+ * Signups join the "Salmonberry Films" segment, subscribed to the
+ * "New Salmonberry films" topic. IDs are from the Resend dashboard.
  *
  * Resend holds the list and handles unsubscribes. Nothing is stored here.
  */
+
+const SEGMENT_ID = "d1422630-e3fa-497f-a1ae-bdaf62a8ce35"; // Salmonberry Films
+const TOPIC_ID = "6a839e6d-415e-4ef0-bc8f-6699757acd50"; // New Salmonberry films
 
 const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
@@ -39,9 +42,13 @@ export async function POST(request: Request) {
     );
   }
 
-  const segmentId = process.env.RESEND_SEGMENT_ID;
-  const payload: Record<string, unknown> = { email, unsubscribed: false };
-  if (segmentId) payload.segments = [{ id: segmentId }];
+  const payload = {
+    email,
+    unsubscribed: false,
+    properties: { source: "benjaminhazel.com" },
+    segments: [{ id: SEGMENT_ID }],
+    topics: [{ id: TOPIC_ID, subscription: "opt_in" }],
+  };
 
   try {
     const res = await fetch("https://api.resend.com/contacts", {
