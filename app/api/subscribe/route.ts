@@ -42,43 +42,52 @@ export async function POST(request: Request) {
     );
   }
 
-  const payload = {
-    email,
-    unsubscribed: false,
-    properties: { source: "benjaminhazel.com" },
-    segments: [{ id: SEGMENT_ID }],
-    topics: [{ id: TOPIC_ID, subscription: "opt_in" }],
-  };
+  const API = "https://api.resend.com";
+  const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" };
+  const enc = encodeURIComponent(email);
+  const fail = () =>
+    NextResponse.json({ message: "That didn’t go through. Try again in a minute." }, { status: 502 });
 
   try {
-    const res = await fetch("https://api.resend.com/contacts", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      const text = await res.text();
-      // Someone already on the list signing up again is fine.
-      if (/already exists/i.test(text)) {
-        return NextResponse.json({ message: "You’re already on the list. Thanks." });
+    // Already a contact (say, from a film signup)? Add them to the list and topic,
+    // but keep their original signup source: it's the consent record.
+    const existing = await fetch(`${API}/contacts/${enc}`, { headers });
+    if (existing.ok) {
+      const steps: [string, RequestInit][] = [
+        [`${API}/contacts/${enc}`, { method: "PATCH", headers, body: JSON.stringify({ unsubscribed: false }) }],
+        [`${API}/contacts/${enc}/segments/${SEGMENT_ID}`, { method: "POST", headers }],
+        [`${API}/contacts/${enc}/topics`, { method: "PATCH", headers, body: JSON.stringify([{ id: TOPIC_ID, subscription: "opt_in" }]) }],
+      ];
+      for (const [url, init] of steps) {
+        const u = await fetch(url, init);
+        if (!u.ok) console.error("[subscribe] Resend update error", u.status, url, await u.text());
       }
-      console.error("[subscribe] Resend returned", res.status, text);
-      return NextResponse.json(
-        { message: "That didn’t go through. Try again in a minute." },
-        { status: 502 },
-      );
+      return NextResponse.json({ message: "You’re on the list. Thanks." });
+    }
+    if (existing.status !== 404) {
+      console.error("[subscribe] Resend lookup error", existing.status, await existing.text());
+      return fail();
+    }
+
+    const res = await fetch(`${API}/contacts`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        email,
+        unsubscribed: false,
+        properties: { source: "benjaminhazel.com" },
+        segments: [{ id: SEGMENT_ID }],
+        topics: [{ id: TOPIC_ID, subscription: "opt_in" }],
+      }),
+    });
+    if (!res.ok) {
+      console.error("[subscribe] Resend returned", res.status, await res.text());
+      return fail();
     }
 
     return NextResponse.json({ message: "Thanks. You’re on the list." });
   } catch (error) {
     console.error("[subscribe] request to Resend failed", error);
-    return NextResponse.json(
-      { message: "That didn’t go through. Try again in a minute." },
-      { status: 502 },
-    );
+    return fail();
   }
 }
